@@ -1,54 +1,59 @@
-import React from 'react';
-import {browser, Tabs} from 'webextension-polyfill-ts';
+import React, { useState } from "react";
+import { browser } from 'webextension-polyfill-ts';
 
 import './styles.scss';
 
-function openWebPage(url: string): Promise<Tabs.Tab> {
-  return browser.tabs.create({url});
-}
 
 const Popup: React.FC = () => {
+  const [channel, setChannel] = useState("");
+
+  async function submitForm() {
+    const value = channel.trim().toLowerCase()
+    if (value) {
+      // console.warn(`Submitting..."${value}"`)
+
+      let favorites: string[] = new Array()
+      browser.storage.sync.get('twitchFavoriteChannels')
+        .then(
+          (resp) => {
+            if (resp && resp['twitchFavoriteChannels']) {
+              favorites = resp['twitchFavoriteChannels']
+            }
+
+            if (!favorites.includes(value)) {
+              favorites.push(value)
+            }
+            browser.storage.sync.set({ "twitchFavoriteChannels": favorites })
+              .then(
+                () => console.log(`Setting at 2 (SYNC) OK`),
+                (error) => console.log(`Error 4: ${JSON.stringify(error)}`)
+              )
+
+          },
+          (error) => console.error(`Error 1: ${JSON.stringify(error)}`)
+        )
+    }
+  }
+
   return (
-    <section id="popup">
-      <h2>WEB-EXTENSION-STARTER</h2>
-      <button
+    <React.Fragment>
+      <div>
+        <label>Channel</label>
+        <input
+          value={channel}
+          onChange={e => setChannel(e.target.value)}
+          type="input"
+          id="channel"
+        />
+      </div>
+
+      <button className="btn-join" onClick={submitForm}
         id="options__button"
         type="button"
-        onClick={(): Promise<Tabs.Tab> => {
-          return openWebPage('options.html');
-        }}
       >
-        Options Page
+        Add Channel
       </button>
-      <div className="links__holder">
-        <ul>
-          <li>
-            <button
-              type="button"
-              onClick={(): Promise<Tabs.Tab> => {
-                return openWebPage(
-                  'https://github.com/abhijithvijayan/web-extension-starter'
-                );
-              }}
-            >
-              GitHub
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              onClick={(): Promise<Tabs.Tab> => {
-                return openWebPage(
-                  'https://www.buymeacoffee.com/abhijithvijayan'
-                );
-              }}
-            >
-              Buy Me A Coffee
-            </button>
-          </li>
-        </ul>
-      </div>
-    </section>
+    </React.Fragment>
   );
 };
 

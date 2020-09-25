@@ -1,5 +1,3 @@
-import { browser } from "webextension-polyfill-ts"
-
 interface FollowedRow {
     div: HTMLElement
     isFavorite?: boolean
@@ -10,31 +8,9 @@ interface FollowedRow {
     currentPosition?: number
 }
 
-let XXX: string[]
-
-const parseViewers = (viewerCount: string | null) => {
-    if (viewerCount === null) { return Number.NaN }
-    let viewers = viewerCount.trim().toUpperCase()
-    if (viewers === 'OFFLINE' || viewers === '') {  // Should not be necessary to check for empty string here, but just in case.
-        return Number.NaN
-    }
-    if (viewers.endsWith('K')) {
-        return 1000 * Number.parseFloat(viewers.substr(0, viewers.length - 1))
-    }
-    if (viewers.endsWith('M')) {
-        return 1000000 * Number.parseFloat(viewers.substr(0, viewers.length - 1))
-    }
-    return Number.parseInt(viewers)
-}
+const XXX = ['cazgem', 'pumpkinhead_live', 'k1gg1', 'soeverdream', 'dawnlaine', 'laslo1984', 'kaiielle', 'frakkle', 'z_lycos', 'theyed_', 'blaknite_', 'blipo'];
 
 const getFavorites = () => {
-    // TODO: Optimize this, which is currently polling every time it updates the values from local storage
-    browser.storage.sync.get('twitchFavoriteChannels')
-        .then(
-            (resp) => { XXX = resp['twitchFavoriteChannels'] || new Array() },
-            (err) => { console.error(err) })
-
-
     let FAVORITES: any = {}
     for (let e of XXX) {
         FAVORITES[e] = true
@@ -80,7 +56,7 @@ const showMore = () => {
 
 const sortFollowed = () => {
     let FAVORITES: any = getFavorites()
-    // console.log(FAVORITES)
+
     const checkFavorite = (channel: string) => FAVORITES[channel.toLowerCase()] !== undefined
 
     let container = getElementByXpath('//*[@id="sideNav"]//div[contains(@class, "tw-transition-group")]') as HTMLElement
@@ -92,61 +68,54 @@ const sortFollowed = () => {
         container = getElementByXpath('//*[@id="sideNav"]//div[contains(@class, "tw-transition-group")]') as HTMLElement
     }
 
-    let liveStreams: FollowedRow[] = new Array()
+    let rows: FollowedRow[] = new Array()
 
     let xx = Array()
     for (let index = 0; index < container.children.length; index++) {
         xx.push(container.children[index] as HTMLElement)
     }
 
-    xx.forEach((element: HTMLElement, idx: number) => {
-        let info: FollowedRow = { div: element, viewers: Number.NaN }
+    xx.forEach((e: HTMLElement) => {
+        let info: FollowedRow = { div: e, viewers: -1 }
 
-        // info.viewers = Number.parseInt(element.getElementsByTagName('span')[0].textContent || '')
-        info.viewers = parseViewers(element.getElementsByTagName('span')[0].textContent || '')
+        info.viewers = Number.parseInt(e.getElementsByTagName('span')[0].textContent || '')
         if (!Number.isNaN(info.viewers)) {
-            info.url = element.getElementsByTagName('a')[0].href
+            info.url = e.getElementsByTagName('a')[0].href
 
-            let p = element.getElementsByTagName('p')
+            let p = e.getElementsByTagName('p')
             if (p !== undefined && p.length > 0 && p[0].textContent !== null) {
                 info.channel = p[0].textContent.toLowerCase()
             }
 
-            p = element.getElementsByTagName('p')
+            p = e.getElementsByTagName('p')
             if (p !== undefined && p.length >= 2 && p[1].textContent !== null) {
                 info.game = p[1].textContent
             }
 
             info.isFavorite = info.channel ? checkFavorite(info.channel) : false
-            info.currentPosition = idx
-            liveStreams.push(info)
             // console.log(info)
+            rows.push(info)
         }
     });
 
-    // liveStreams.sort((a, b) => b.viewers - a.viewers);
-    liveStreams.sort((a, b) => ((b.isFavorite ? 1000000000 : 1) + b.viewers) - ((a.isFavorite ? 1000000000 : 1) + a.viewers));  // FIXME: Quick and dirty way to sort, implement something else.
+    rows.sort((a, b) => b.viewers - a.viewers);
+    
+    // Node after which the first non-favorite element would be added.
+    // let lastSortedFavorite: HTMLElement | null = null
 
-    let sortedFavorites: number = 0
-    for (let idx = liveStreams.length - 1; idx >= 0; idx--) {
-        const row = liveStreams[idx];
-        const parentNode = row.div.parentNode
-        if (row.isFavorite && parentNode) {
-            parentNode.removeChild(row.div);
+    for (let i = rows.length - 1; i >= 0; i--) {
+        const row = rows[i];
+        if (row.isFavorite && row.div.parentNode) {
+            row.div.parentNode.removeChild(row.div);
             container.insertBefore(row.div, container.childNodes[0]);
             row.div.style.backgroundColor = 'rgba(30, 165, 20, 0.25)';
-            sortedFavorites += 1
-            // console.log(`Favorite Channel ${row.channel} at index ${row.currentPosition} moved to position ${sortedFavorites} (${row.viewers} viewers).`);
-        } else {
-            parentNode?.removeChild(row.div);  // XXX: Check me
-            container.insertBefore(row.div, container.childNodes[sortedFavorites]);
-            // console.log(`Channel ${row.channel} at index ${row.currentPosition} moved to position ${idx} (${row.viewers} viewers).`);
+            console.log(`Channel ${row.channel} moved.`);
         }
     }
 }
 
 (() => {
-    setInterval(() => sortFollowed(), 10000);
+    setInterval(() => sortFollowed(), 15000);
 })();
 
 export { };

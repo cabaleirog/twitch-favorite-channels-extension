@@ -1,4 +1,4 @@
-import { browser } from "webextension-polyfill-ts"
+import { getChannelsFromStorage } from "../utils/storage"
 
 interface FollowedRow {
     div: HTMLElement
@@ -9,8 +9,6 @@ interface FollowedRow {
     viewers: number
     currentPosition?: number
 }
-
-let XXX: string[]
 
 const parseViewers = (viewerCount: string | null) => {
     if (viewerCount === null) { return Number.NaN }
@@ -27,20 +25,14 @@ const parseViewers = (viewerCount: string | null) => {
     return Number.parseInt(viewers)
 }
 
-const getFavorites = () => {
-    // TODO: Optimize this, which is currently polling every time it updates the values from local storage
-    browser.storage.sync.get('twitchFavoriteChannels')
-        .then(
-            (resp) => { XXX = resp['twitchFavoriteChannels'] || new Array() },
-            (err) => { console.error(err) })
-
-
-    let FAVORITES: any = {}
-    for (let e of XXX) {
-        FAVORITES[e] = true
+const getFavorites = async () => {
+    // TODO: Optimize this, currently polling every time it updates the values from local storage
+    const channels = await getChannelsFromStorage()
+    let mapping: any = {}
+    for (let item of channels) {
+        mapping[item] = true
     }
-    // console.log(FAVORITES)
-    return FAVORITES
+    return mapping
 }
 
 const canExpandFurther = (element: HTMLElement) => {
@@ -78,9 +70,8 @@ const showMore = () => {
 //     }
 // }
 
-const sortFollowed = () => {
-    let FAVORITES: any = getFavorites()
-    // console.log(FAVORITES)
+const sortFollowed = async () => {
+    let FAVORITES = await getFavorites()
     const checkFavorite = (channel: string) => FAVORITES[channel.toLowerCase()] !== undefined
 
     let container = getElementByXpath('//*[@id="sideNav"]//div[contains(@class, "tw-transition-group")]') as HTMLElement
@@ -124,7 +115,6 @@ const sortFollowed = () => {
         }
     });
 
-    // liveStreams.sort((a, b) => b.viewers - a.viewers);
     liveStreams.sort((a, b) => ((b.isFavorite ? 1000000000 : 1) + b.viewers) - ((a.isFavorite ? 1000000000 : 1) + a.viewers));  // FIXME: Quick and dirty way to sort, implement something else.
 
     let sortedFavorites: number = 0
@@ -136,17 +126,25 @@ const sortFollowed = () => {
             container.insertBefore(row.div, container.childNodes[0]);
             row.div.style.backgroundColor = 'rgba(30, 165, 20, 0.25)';
             sortedFavorites += 1
-            // console.log(`Favorite Channel ${row.channel} at index ${row.currentPosition} moved to position ${sortedFavorites} (${row.viewers} viewers).`);
         } else {
             parentNode?.removeChild(row.div);  // XXX: Check me
             container.insertBefore(row.div, container.childNodes[sortedFavorites]);
-            // console.log(`Channel ${row.channel} at index ${row.currentPosition} moved to position ${idx} (${row.viewers} viewers).`);
+            row.div.style.backgroundColor = 'rgba(30, 165, 20, 0)';  // FIXME: Workaround to fix the issue of deleted favorites for now.
         }
     }
+
+    // if (liveStreams.length > 0) {
+    //     let tmp: HTMLElement = liveStreams[0].div
+    //     tmp.innerHTML = "<div><h1>HERE</h1></div>"
+    //     container.insertBefore(tmp, container.childNodes[0]);
+    // }
+
+
 }
 
 (() => {
-    setInterval(() => sortFollowed(), 10000);
+    getChannelsFromStorage().then(resp => console.debug(`Channels in storage: ${JSON.stringify(resp)}`))
+    setInterval(() => sortFollowed(), 5000);
 })();
 
 export { };

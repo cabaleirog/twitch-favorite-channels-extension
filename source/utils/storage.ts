@@ -1,12 +1,18 @@
 import { browser } from 'webextension-polyfill-ts';
 import { STORAGE_NAME } from './constants';
 
-const addChannelToStorage = (channel: string) => {
+const addChannelToStorage = async (channel: string) => {
     let favorites: string[]
     channel = channel.trim().toLowerCase()
-    browser.storage.sync.get(STORAGE_NAME)
+    if (!channel) {
+        return
+    }
+    await browser.storage.sync.get(STORAGE_NAME)
         .then(
-            (resp) => {
+            resp => {
+                console.debug('resp from getting the storage data on addChannelToStorage')
+                console.debug(resp)
+
                 favorites = resp[STORAGE_NAME] || new Array()  // Get current values on storage
 
                 if (favorites.includes(channel)) {
@@ -15,16 +21,37 @@ const addChannelToStorage = (channel: string) => {
                 }
 
                 favorites.push(channel)
-                browser.storage.sync.set({ STORAGE_NAME: favorites })
+                console.debug('favorities after push')
+                console.debug(favorites)
+                console.debug({ 'twitchFavoriteChannels': favorites })
+                console.debug('--------')
+                browser.storage.sync.set({ 'twitchFavoriteChannels': favorites })
                     .then(
-                        () => console.debug(`Channel ${channel} added successfully to storage`),
-                        (err) => console.error(JSON.stringify(err))
+                        resp => {
+                            console.debug(resp)
+                            console.debug(`Channel ${channel} added successfully to storage`)
+                            getChannelsFromStorage().then(resp => console.debug(resp))
+                        },
+                        err => console.error(JSON.stringify(err))
                     )
-
             },
-            (err) => console.error(JSON.stringify(err))
+            err => console.error(JSON.stringify(err))
         )
 }
+
+const getChannelsFromStorage = (): Promise<string[]> => {
+    return browser.storage.sync.get(STORAGE_NAME)
+        .then(
+            resp => resp[STORAGE_NAME] || new Array(),
+            () => new Array()
+        )
 }
 
-export { addChannelToStorage };
+
+const removeChannelFromStorage = async (channel: string) => {
+    let channels = await getChannelsFromStorage()
+    channels = channels.filter(e => e !== channel)    
+    await browser.storage.sync.set({ 'twitchFavoriteChannels': channels })
+}
+
+export { addChannelToStorage, getChannelsFromStorage, removeChannelFromStorage };

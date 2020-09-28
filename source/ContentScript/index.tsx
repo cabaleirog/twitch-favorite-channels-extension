@@ -158,24 +158,32 @@ const sortFollowed = async () => {
 
 
 
-(() => {
+browser.runtime.onMessage.addListener(message => {
+    const favoriteDivId = "twitch-favorite-channels-extension"
 
-    setTimeout(() => {
-        const div = document.createElement('div');
-        div.id = "twitch-favorite-channels-extension";
-    
-        const target = getElementByXpath('//*[@class="metadata-layout__secondary-button-spacing"]')
-        console.log(target)
-        target ? target.appendChild(div) : document.body.appendChild(div)
-    
-        ReactDOM.render(<FavoriteButton />, div)
-        //ReactDOM.render(<ToggleFavorite />, div)
-    
-        getChannelsFromStorage().then(resp => console.debug(`Channels in storage: ${JSON.stringify(resp)}`))
-        setInterval(() => sortFollowed(), 5000);
-    }, 6000)
-})();
+    setTimeout(() => {  // Allow the page to load first
+        
+        if (!document.getElementById(favoriteDivId)) {  // For page first print
+            const div = document.createElement('div');
+            div.id = favoriteDivId;
+        
+            const target = getElementByXpath('//*[@class="metadata-layout__secondary-button-spacing"]')
+            target ? target.appendChild(div) : document.body.appendChild(div)
+            ReactDOM.render(<FavoriteButton />, div)
 
+            setInterval(() => sortFollowed(), 5000);  // todo: maybe use a global or local variable to check if running already
+        }
+    }, 10000)
+    getChannelsFromStorage().then(resp => console.debug(`Channels in storage: ${JSON.stringify(resp)}`))
+    if (message.status === true) {
+        const element = document.getElementById(favoriteDivId)
+        if (element) element.style.backgroundColor = 'rgba(0, 255, 0, 0.25)'
+    }
+    if (message.status === false) {
+        const element = document.getElementById(favoriteDivId)
+        if (element) element.style.backgroundColor = 'rgba(0, 0, 0, 0.0)'
+    }
+})
 
 
 export { };

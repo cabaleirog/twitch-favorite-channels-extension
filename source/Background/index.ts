@@ -37,11 +37,10 @@ browser.runtime.onMessage.addListener((message, sender) => {
     "from the extension")
   console.debug(message)
   console.debug(sender)
-  checkStorage('k1gg1').then(resp => console.debug(resp))
 
   if (message.source === 'favorite button' && message.action === 'toggle') {
-    if (sender.url) {
-      let channel = parseChannelName(sender.url)
+    if (sender.tab?.url) {
+      let channel = parseChannelName(sender.tab.url)
       console.debug(channel)
 
       return checkStorage(channel)
@@ -73,7 +72,10 @@ browser.runtime.onMessage.addListener((message, sender) => {
   return
 })
 
-
 browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  browser.tabs.sendMessage(tabId, { changeInfo: changeInfo, tab: tab, tabId: tabId})
+  if (tab.url) {
+  const channel = parseChannelName(tab.url)
+  checkStorage(channel)
+    .then(resp => browser.tabs.sendMessage(tabId, { status: resp, changeInfo: changeInfo, tab: tab }))
+  }
 })

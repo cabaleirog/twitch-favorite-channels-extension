@@ -1,4 +1,25 @@
+import * as React from 'react'
+import ReactDOM from 'react-dom';
+import { browser } from 'webextension-polyfill-ts'
 import { getChannelsFromStorage } from "../utils/storage"
+import FavoriteButton from './button';
+import './styles.scss';
+
+
+
+browser.runtime.onMessage.addListener((message, sender) => {
+    console.log('From onMessage in content script')
+    console.log(message)
+    console.log(sender)
+
+    if (message === 'added') {
+        const element = document.getElementById("twitch-favorite-channels-extension")
+        element?.setAttribute('background', 'red')
+    }
+
+})
+
+
 
 interface FollowedRow {
     div: HTMLElement
@@ -133,18 +154,28 @@ const sortFollowed = async () => {
         }
     }
 
-    // if (liveStreams.length > 0) {
-    //     let tmp: HTMLElement = liveStreams[0].div
-    //     tmp.innerHTML = "<div><h1>HERE</h1></div>"
-    //     container.insertBefore(tmp, container.childNodes[0]);
-    // }
-
-
 }
 
+
+
 (() => {
-    getChannelsFromStorage().then(resp => console.debug(`Channels in storage: ${JSON.stringify(resp)}`))
-    setInterval(() => sortFollowed(), 5000);
+
+    setTimeout(() => {
+        const div = document.createElement('div');
+        div.id = "twitch-favorite-channels-extension";
+    
+        const target = getElementByXpath('//*[@class="metadata-layout__secondary-button-spacing"]')
+        console.log(target)
+        target ? target.appendChild(div) : document.body.appendChild(div)
+    
+        ReactDOM.render(<FavoriteButton />, div)
+        //ReactDOM.render(<ToggleFavorite />, div)
+    
+        getChannelsFromStorage().then(resp => console.debug(`Channels in storage: ${JSON.stringify(resp)}`))
+        setInterval(() => sortFollowed(), 5000);
+    }, 6000)
 })();
+
+
 
 export { };

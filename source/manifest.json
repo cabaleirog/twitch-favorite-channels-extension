@@ -65,6 +65,9 @@
     "matches": [
       "*://www.twitch.tv/*"
     ],
+    "exclude_globs": [
+      "*://www.twitch.tv/popout/*"
+    ],
     "js": [
       "js/contentScript.bundle.js"
     ]

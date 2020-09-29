@@ -1,21 +1,21 @@
+import log from 'loglevel'
 import React, { Component } from 'react'
 import Button from 'react-bootstrap/esm/Button'
 import { browser } from "webextension-polyfill-ts"
 import './styles.scss'
 
-
+log.setLevel(log.levels.INFO)
 
 
 browser.runtime.onMessage.addListener((message, sender) => {
-    console.log('From Button Over the')
-    console.log(message)
-    console.log(sender)
+    log.debug('Listener on button.tsx')
+    log.debug(message)
+    log.trace(sender)
 
     if (message === 'added') {
         const element = document.getElementById("twitch-favorite-channels-extension")
         element?.setAttribute('background', 'red')
     }
-
 })
 
 
@@ -24,10 +24,11 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean }> {
     constructor(props: any) {
         super(props)
         this.state = { isFavorite: true }
-        console.info(this)
+        log.debug(this)
     }
 
     async handleClick() {
+        log.info('Toggling Favorite...')
         console.debug('Button clicked!')
         browser.runtime.sendMessage({
             source: 'favorite button',
@@ -35,17 +36,17 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean }> {
             status: 'todo'
         })
             .then(resp => {
-                console.debug(resp)
+                log.debug(resp)
                 if (resp === 'added') {
-                    console.info(this)
+                    log.debug(this)
                     const element = document.getElementById('twitch-favorite-channels-extension')
                     if (element) element.style.backgroundColor = 'rgba(0, 255, 0, 0.25)'
                 } else if (resp === 'removed') {
-                    console.info(this)
+                    log.debug(this)
                     const element = document.getElementById('twitch-favorite-channels-extension')
                     if (element) element.style.backgroundColor = 'rgba(0, 0, 0, 0.0)'
                 } else {
-                    console.debug(`Unhandled response received from background. Expected 'added' or 'removed', but got ${resp}`)
+                    log.debug(`Unhandled response received from background. Expected 'added' or 'removed', but got ${resp}`)
                 }
             })
     }

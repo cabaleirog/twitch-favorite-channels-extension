@@ -1,5 +1,7 @@
 import { browser } from 'webextension-polyfill-ts';
 import { STORAGE_NAME } from './constants';
+import log from 'loglevel';
+
 
 const addChannelToStorage = async (channel: string) => {
     let favorites: string[]
@@ -10,32 +12,32 @@ const addChannelToStorage = async (channel: string) => {
     await browser.storage.sync.get(STORAGE_NAME)
         .then(
             resp => {
-                console.debug('resp from getting the storage data on addChannelToStorage')
-                console.debug(resp)
+                log.debug('resp from getting the storage data on addChannelToStorage')
+                log.debug(resp)
 
                 favorites = resp[STORAGE_NAME] || new Array()  // Get current values on storage
 
                 if (favorites.includes(channel)) {
-                    console.warn(`Attempting to add channel ${channel} to storage, but channel is already there.`)
+                    log.warn(`Attempting to add channel ${channel} to storage, but channel is already there.`)
                     return
                 }
 
                 favorites.push(channel)
-                console.debug('favorities after push')
-                console.debug(favorites)
-                console.debug({ 'twitchFavoriteChannels': favorites })
-                console.debug('--------')
+                log.debug('favorities after push')
+                log.debug(favorites)
+                log.debug({ 'twitchFavoriteChannels': favorites })
+                log.debug('--------')
                 browser.storage.sync.set({ 'twitchFavoriteChannels': favorites })
                     .then(
                         resp => {
-                            console.debug(resp)
-                            console.debug(`Channel ${channel} added successfully to storage`)
-                            getChannelsFromStorage().then(resp => console.debug(resp))
+                            log.debug(resp)
+                            log.debug(`Channel ${channel} added successfully to storage`)
+                            getChannelsFromStorage().then(resp => log.debug(resp))
                         },
-                        err => console.error(JSON.stringify(err))
+                        err => log.error(JSON.stringify(err))
                     )
             },
-            err => console.error(JSON.stringify(err))
+            err => log.error(JSON.stringify(err))
         )
 }
 

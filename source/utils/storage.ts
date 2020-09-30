@@ -1,5 +1,5 @@
 import { browser } from 'webextension-polyfill-ts';
-import { STORAGE_NAME } from './constants';
+import { STORAGE_KEY } from './constants';
 import log from 'loglevel';
 
 
@@ -9,13 +9,13 @@ const addChannelToStorage = async (channel: string) => {
     if (!channel) {
         return
     }
-    await browser.storage.sync.get(STORAGE_NAME)
+    await browser.storage.sync.get(STORAGE_KEY)
         .then(
             resp => {
                 log.debug('resp from getting the storage data on addChannelToStorage')
                 log.debug(resp)
 
-                favorites = resp[STORAGE_NAME] || new Array()  // Get current values on storage
+                favorites = resp[STORAGE_KEY] || new Array()  // Get current values on storage
 
                 if (favorites.includes(channel)) {
                     log.warn(`Attempting to add channel ${channel} to storage, but channel is already there.`)
@@ -42,9 +42,9 @@ const addChannelToStorage = async (channel: string) => {
 }
 
 const getChannelsFromStorage = (): Promise<string[]> => {
-    return browser.storage.sync.get(STORAGE_NAME)
+    return browser.storage.sync.get(STORAGE_KEY)
         .then(
-            resp => resp[STORAGE_NAME] || new Array(),
+            resp => resp[STORAGE_KEY] || new Array(),
             () => new Array()
         )
 }

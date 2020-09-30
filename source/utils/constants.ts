@@ -1,1 +1,1 @@
-export const STORAGE_NAME = 'twitchFavoriteChannels'
+export const STORAGE_KEY = 'twitchFavoriteChannels'

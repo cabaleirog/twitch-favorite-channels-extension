@@ -1,6 +1,6 @@
-import { browser } from 'webextension-polyfill-ts';
-import { STORAGE_KEY } from './constants';
-import log from 'loglevel';
+import log from 'loglevel'
+import { browser } from 'webextension-polyfill-ts'
+import { STORAGE_KEY } from './constants'
 
 
 const addChannelToStorage = async (channel: string) => {
@@ -12,10 +12,10 @@ const addChannelToStorage = async (channel: string) => {
     await browser.storage.sync.get(STORAGE_KEY)
         .then(
             resp => {
-                log.debug('resp from getting the storage data on addChannelToStorage')
-                log.debug(resp)
+                log.info('Values in storage before inserting: ', JSON.stringify(resp))
 
-                favorites = resp[STORAGE_KEY] || new Array()  // Get current values on storage
+                // Get current values on storage
+                favorites = resp[STORAGE_KEY] || new Array()
 
                 if (favorites.includes(channel)) {
                     log.warn(`Attempting to add channel ${channel} to storage, but channel is already there.`)
@@ -23,10 +23,8 @@ const addChannelToStorage = async (channel: string) => {
                 }
 
                 favorites.push(channel)
-                log.debug('favorities after push')
                 log.debug(favorites)
-                log.debug({ 'twitchFavoriteChannels': favorites })
-                log.debug('--------')
+
                 browser.storage.sync.set({ 'twitchFavoriteChannels': favorites })
                     .then(
                         resp => {
@@ -52,8 +50,9 @@ const getChannelsFromStorage = (): Promise<string[]> => {
 
 const removeChannelFromStorage = async (channel: string) => {
     let channels = await getChannelsFromStorage()
-    channels = channels.filter(e => e !== channel)    
-    await browser.storage.sync.set({ 'twitchFavoriteChannels': channels })
+    channels = channels.filter(e => e !== channel)
+    browser.storage.sync.set({ 'twitchFavoriteChannels': channels })
 }
 
-export { addChannelToStorage, getChannelsFromStorage, removeChannelFromStorage };
+export { addChannelToStorage, getChannelsFromStorage, removeChannelFromStorage }
+

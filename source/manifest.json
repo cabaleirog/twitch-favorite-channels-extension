@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "name": "Sample WebExtension",
-  "version": "0.0.0",
+  "name": "Twitch Favorites",
+  "version": "0.9.0",
 
   "icons": {
     "16": "assets/icons/favicon-16.png",
@@ -9,9 +9,9 @@
     "48": "assets/icons/favicon-48.png",
     "128": "assets/icons/favicon-128.png"
   },
-  "description": "Sample description",
-  "homepage_url": "https://github.com/cabaleirog/web-extension-starter",
-  "short_name": "Sample Name",
+  "description": "Improve sorting of your followed channels list by adding a 'Favorite' flag to them.",
+  "homepage_url": "https://github.com/BrainlessSociety/twitch-favorites-extension",
+  "short_name": "Twitch Favorites",
 
   "permissions": [
     "storage",
@@ -20,9 +20,9 @@
 
   "content_security_policy": "script-src 'self'; object-src 'self'",
 
-  "__chrome|firefox__author": "cabaleirog",
+  "__chrome|firefox__author": "BrainlessSociety",
   "__opera__developer": {
-    "name": "cabaleirog"
+    "name": "BrainlessSociety"
   },
 
   "__firefox__applications": {
@@ -42,7 +42,7 @@
       "48": "assets/icons/favicon-48.png",
       "128": "assets/icons/favicon-128.png"
     },
-    "default_title": "tiny title",
+    "default_title": "Twitch Favorites",
     "__chrome|opera__chrome_style": false,
     "__firefox__browser_style": false
   },

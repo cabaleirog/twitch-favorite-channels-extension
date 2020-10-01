@@ -1,5 +1,8 @@
+import log from 'loglevel'
 import { browser } from 'webextension-polyfill-ts'
 import { addChannelToStorage, getChannelsFromStorage, removeChannelFromStorage } from '../utils/storage'
+
+// log.setLevel(log.levels.INFO)  // Weirdly, this line produces an error in the entire thing.
 
 
 const parseChannelName = (url: string) => {
@@ -10,48 +13,48 @@ const parseChannelName = (url: string) => {
 const checkStorage = async (channel: string) => {
   // returns true if the channel is on the browser storage
   const channels = await getChannelsFromStorage()
-  console.debug(channels)
+  log.debug(channel)
   return channels && channels.includes(channel)
 }
 
 const setStorageValue = async (channel: string, value: boolean) => {
   // adds or removes the channel on storage, adds if value is true, removes otherwise.
   if (typeof value !== 'boolean') {
-    console.error(`setStorageValue expected a boolean, but ${typeof value} was provided`)
+    log.error(`setStorageValue expected a boolean, but ${typeof value} was provided`)
     return  // todo: maybe return false and check for the output
   }
 
   if (value === true) {
-    console.debug(`setStorageValue(true) to storage ${channel}`)
+    log.debug(`setStorageValue(true) to storage ${channel}`)
     await addChannelToStorage(channel)
   } else {
-    console.debug(`setStorageValue(false) to storage ${channel}`)
+    log.debug(`setStorageValue(false) to storage ${channel}`)
     await removeChannelFromStorage(channel)
   }
 }
 
 browser.runtime.onMessage.addListener((message, sender) => {
-  //browser.runtime.sendMessage('IM HERE').then(() => console.debug('Message sent from the listener'))
-  console.log(sender.tab ?
+  //browser.runtime.sendMessage('IM HERE').then(() => log.debug('Message sent from the listener'))
+  log.debug(sender.tab ?
     "from a content script:" + sender.tab.url :
     "from the extension")
-  console.debug(message)
-  console.debug(sender)
+  log.debug(message)
+  log.debug(sender)
 
   if (message.source === 'favorite button' && message.action === 'toggle') {
     if (sender.tab?.url) {
       let channel = parseChannelName(sender.tab.url)
-      console.debug(channel)
+      log.debug(channel)
 
       return checkStorage(channel)
         .then(resp => {
           if (resp) {  // Channel is currently on storage, we will remove it
-            console.log(`Removing favorite from storage`)
+            log.info(`Removing favorite from storage`)
             return setStorageValue(channel, false).then(() => 'removed')
             //browser.runtime.sendMessage('added')
             //return 'added' 
           } else {
-            console.log(`Adding favorite in storage`)
+            log.info(`Adding favorite in storage`)
             return setStorageValue(channel, true).then(() => 'added')
             //browser.runtime.sendMessage('removed')
             //return 'removed'
@@ -69,6 +72,15 @@ browser.runtime.onMessage.addListener((message, sender) => {
 
   }
   //return true  // todo: return a promise instead, as this is deprecated. https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#Sending_an_asynchronous_response_using_a_Promise
+
+  if (message.action === 'unfollow') {
+    if (sender.tab?.url) {
+      let channel = parseChannelName(sender.tab.url)
+      log.info(`Cleaning storage after channel "${channel}" was unfollowed`)
+      setStorageValue(channel, false)
+    }
+  }
+
   return
 })
 

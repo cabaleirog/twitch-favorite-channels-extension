@@ -1,4 +1,4 @@
-export interface FollowedRow {
+export interface Stream {
     div: HTMLElement
     isFavorite?: boolean
     url?: string

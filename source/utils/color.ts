@@ -18,3 +18,5 @@ export class Color {
     }
 
 }
+
+export default Color

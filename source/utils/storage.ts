@@ -2,8 +2,12 @@ import log from 'loglevel'
 import { browser } from 'webextension-polyfill-ts'
 import { STORAGE_KEY } from './constants'
 
+log.setLevel(log.levels.INFO)
+
 
 const addChannelToStorage = async (channel: string) => {
+    log.debug(`Adding channel ${channel} to storage`)
+
     let favorites: string[]
     channel = channel.trim().toLowerCase()
     if (!channel) {
@@ -40,15 +44,18 @@ const addChannelToStorage = async (channel: string) => {
 }
 
 const getChannelsFromStorage = (): Promise<string[]> => {
+    // log.debug(`Getting channels from storage`)
     return browser.storage.sync.get(STORAGE_KEY)
         .then(
             resp => resp[STORAGE_KEY] || new Array(),
             () => new Array()
         )
+        .catch(err => log.error(err))
 }
 
 
 const removeChannelFromStorage = async (channel: string) => {
+    log.debug(`Removing channel ${channel} from storage`)
     let channels = await getChannelsFromStorage()
     channels = channels.filter(e => e !== channel)
     browser.storage.sync.set({ 'twitchFavoriteChannels': channels })

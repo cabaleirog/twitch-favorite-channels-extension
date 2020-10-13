@@ -15,5 +15,8 @@ export const XPATH_NOTIFICATIONS = '//button[@data-a-target="notifications-toggl
 // `Show More` element which loads additional records in the followed channels list.
 export const XPATH_SHOW_MORE = '//*[@data-test-selector="ShowMore"]'
 
+// How often, in milliseconds, should the script be executed on the setInterval.
+export const REFRESH_INTERVAL = 100  // milliseconds
+
 export const favoriteChannelColor = new Color(30, 165, 20, 0.3)  // (20, 165, 162, 0.25)
 export const buttonMainColor = new Color(0, 75, 0)

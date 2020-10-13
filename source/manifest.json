@@ -15,6 +15,7 @@
 
   "permissions": [
     "storage",
+    "tabs",
     "*://www.twitch.tv/*"
   ],
 
@@ -66,7 +67,8 @@
       "*://www.twitch.tv/*"
     ],
     "exclude_globs": [
-      "*://www.twitch.tv/popout/*"
+      "*://www.twitch.tv/popout/*",
+      "*://www.twitch.tv/moderator/*"
     ],
     "js": [
       "js/contentScript.bundle.js"

@@ -5,6 +5,7 @@ import ToggleButton from 'react-bootstrap/ToggleButton'
 import { browser } from "webextension-polyfill-ts";
 import { addChannelToStorage, getChannelsFromStorage, removeChannelFromStorage } from "../utils/storage";
 
+// TODO: Remove this, 2 different buttons are defined with overlapping functionality.
 
 interface IToggleState {
     channel: string

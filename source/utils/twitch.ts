@@ -6,7 +6,8 @@ const logger = getLogger('ContentScript')
 export const themes = { 'DARK': 0, 'LIGHT': 1 }
 
 
-export const getTwitchTheme = (): number => {
+// export const getTwitchTheme = (): number => {
+export function getTwitchTheme(): number {
     const darkElements = document.getElementsByClassName('tw-root--theme-dark')
     for (let index = 0; index < darkElements.length; index++) {
         if (darkElements[index].tagName === 'HTML') { return themes.DARK }
@@ -22,6 +23,7 @@ export const getTwitchTheme = (): number => {
 
 }
 
-export const usesDarkTheme = (): boolean => {
+// export const usesDarkTheme = (): boolean => {
+export function usesDarkTheme(): boolean {
     return getTwitchTheme() === themes.DARK
 }

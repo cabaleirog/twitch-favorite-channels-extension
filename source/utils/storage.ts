@@ -5,7 +5,7 @@ import { STORAGE_KEY } from './constants'
 log.setLevel(log.levels.INFO)
 
 
-const addChannelToStorage = async (channel: string) => {
+export async function addChannelToStorage(channel: string) {
     log.debug(`Adding channel ${channel} to storage`)
 
     let favorites: string[]
@@ -43,7 +43,8 @@ const addChannelToStorage = async (channel: string) => {
         )
 }
 
-const getChannelsFromStorage = (): Promise<string[]> => {
+// const getChannelsFromStorage = (): Promise<string[]> => {
+export function getChannelsFromStorage(): Promise<string[]> {
     // log.debug(`Getting channels from storage`)
     return browser.storage.sync.get(STORAGE_KEY)
         .then(
@@ -54,12 +55,10 @@ const getChannelsFromStorage = (): Promise<string[]> => {
 }
 
 
-const removeChannelFromStorage = async (channel: string) => {
+// const removeChannelFromStorage = async (channel: string) => {
+export async function removeChannelFromStorage(channel: string) {
     log.debug(`Removing channel ${channel} from storage`)
     let channels = await getChannelsFromStorage()
     channels = channels.filter(e => e !== channel)
     browser.storage.sync.set({ 'twitchFavoriteChannels': channels })
 }
-
-export { addChannelToStorage, getChannelsFromStorage, removeChannelFromStorage }
-

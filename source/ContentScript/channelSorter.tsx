@@ -5,7 +5,6 @@ import {
   getChannelsFromStorage,
   getElementByXpath,
   XPATH_FOLLOWED_LIST,
-  XPATH_SHOW_MORE,
 } from "../utils";
 
 const logger = getLogger("ContentScript");
@@ -241,11 +240,17 @@ export default class ChannelSorter {
     }
   }
 
+  private getShowMoreElement(): HTMLElement | null {
+    return document.querySelector('[data-test-selector="ShowMore"]');
+  }
+
   private canExpandFurther(): boolean {
-    const showMore = getElementByXpath(XPATH_SHOW_MORE) as HTMLElement;
+    const showMore = this.getShowMoreElement();
 
     // Handle the cases when the sidebar is collapsed or user is not logged in.
-    if (showMore === null || typeof showMore === "undefined") return false;
+    // if (showMore === null || typeof showMore === "undefined") return false;   // XXX: Can be written in a better way
+    if (!showMore) return false;
+    
     // return getElementByXpath('//*[@data-a-target="side-nav-live-status"]//span[text()="Offline"]') !== null
     if (!this.container) return false;
     const viewCounts = Array.from(
@@ -255,7 +260,7 @@ export default class ChannelSorter {
   }
 
   private showMore(): void {
-    const showMore = getElementByXpath(XPATH_SHOW_MORE) as HTMLElement;
+    const showMore = this.getShowMoreElement();
     if (showMore) showMore.click();
   }
 

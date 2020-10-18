@@ -1,10 +1,9 @@
 import React, { Component } from "react";
 import Button from "react-bootstrap/esm/Button";
 import { browser } from "webextension-polyfill-ts";
-import { buttonMainColor, Color } from "../utils";
+import { getChannelsFromStorage, urlToChannel } from "../utils";
 import { getLogger } from "../utils/logging";
 import { usesDarkTheme } from "../utils/twitch";
-import "./styles.scss";
 
 const logger = getLogger("ContentScript");
 
@@ -21,11 +20,37 @@ const logger = getLogger("ContentScript");
 //   }
 // });
 
-class FavoriteButton extends Component<{}, { isFavorite: boolean }> {
+class FavoriteButton extends Component<{}, { isFavorite: boolean, color: string }> {
   constructor(props: any) {
     super(props);
-    this.state = { isFavorite: true };
+    this.handleClick = this.handleClick.bind(this);
+    this.state = { isFavorite: false, color: '' };
     logger.debug(this);
+  }
+
+  componentDidMount() {
+    this.updateState();
+  }
+
+  updateState() {
+    const channel = urlToChannel(window.location.href);
+    if (channel) {
+      getChannelsFromStorage().then((resp) => {
+        this.setState({ isFavorite: resp.includes(channel) });
+        this.updateBackgroundColor();
+      });
+    }
+    logger.debug(this)
+  }
+  
+  updateBackgroundColor() {
+    let bgColor: string
+    if (this.state.isFavorite) {
+      bgColor = usesDarkTheme() ? "rgba(0, 75, 0, 1.0)" : "rgba(30, 165, 20, 0.3)";
+    } else {
+      bgColor = usesDarkTheme() ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.0)";
+    }
+    this.setState({color: bgColor});
   }
 
   async handleClick() {
@@ -38,24 +63,13 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean }> {
       })
       .then((resp) => {
         logger.debug(resp);
+        logger.debug(this);
         if (resp === "added") {
-          logger.debug(this);
-          const element = document.getElementById(
-            "twitch-favorite-channels-extension"
-          );
-          if (element) {
-            element.style.backgroundColor = usesDarkTheme()
-              ? buttonMainColor.toHtml(0.75)
-              : new Color(175, 41, 255).toHtml();
-          }
+          this.setState({isFavorite: true});
+          this.updateBackgroundColor();
         } else if (resp === "removed") {
-          logger.debug(this);
-          const element = document.getElementById(
-            "twitch-favorite-channels-extension"
-          );
-          if (element) {
-            element.style.backgroundColor = buttonMainColor.toHtml(0.0);
-          }
+          this.setState({isFavorite: false})
+          this.updateBackgroundColor();
         } else {
           logger.debug(
             `Unhandled response received from background. Expected 'added' or 'removed', but got ${resp}`
@@ -64,24 +78,11 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean }> {
       });
   }
 
-  getStyle() {
-    return { padding: "10px" };
-  }
-
-  getSpanStyle() {
-    return { paddingLeft: "5px" };
-  }
-
-  // className={this.state.isFavorite ? 'favorite' : ''}
   render() {
     return (
       <Button
-        className={
-          this.state.isFavorite
-            ? "tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--secondary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"
-            : ""
-        }
-        style={this.getStyle()}
+        className="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--secondary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"
+        style={{backgroundColor: this.state.color, padding: "10px"}}
         variant="primary"
         onClick={this.handleClick}
       >
@@ -98,11 +99,11 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean }> {
           >
             <path
               d="M10 15.27L16.18 19L14.54 11.97L20 7.24L12.81 6.63L10 0L7.19 6.63L0 7.24L5.46 11.97L3.82 19L10 15.27Z"
-              fill="#EFEFF1"
+              fill="var(--color-text-button-secondary)"
             />
           </svg>
         </figure>
-        <span style={this.getSpanStyle()}>Favorite</span>
+        <span style={{paddingLeft: "5px"}}>Favorite</span>
       </Button>
     );
   }

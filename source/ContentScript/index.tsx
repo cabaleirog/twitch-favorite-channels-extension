@@ -1,55 +1,91 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
 import { browser } from "webextension-polyfill-ts";
-import {
-  buttonMainColor,
-  Color,
-  FAVORITE_BUTTON_ID,
-  getElementByXpath,
-  XPATH_NOTIFICATIONS,
-  XPATH_TARGET_BUTTON_LOCATION,
-} from "../utils";
+import { FAVORITE_BUTTON_ID } from "../utils";
 import { getLogger, levels } from "../utils/logging";
-import { usesDarkTheme } from "../utils/twitch";
 import FavoriteButton from "./button";
 import ChannelSorter from "./channelSorter";
-import "./styles.scss";
+// import "./styles.scss";
 
 const logger = getLogger("ContentScript");
 logger.setLevel(levels.DEBUG);
 
 let initialized = false;
-let favoriteButtonShown = false;
 
-const checkUserLoggedIn = (): boolean => {
-  const element = document.getElementsByClassName("onsite-notifications");
-  return element.length > 0;
-};
+function checkUserLoggedIn(): boolean {
+  return (
+    !!document.querySelector(".onsite-notifications") ||
+    document.querySelector("body")!.classList.contains("logged-in")
+  );
+}
 
-const renderFavoriteButton = (divId: string) => {
+function renderFavoriteButton(divId: string): boolean {
   logger.info("Creating Favorite button...");
+
+  const element = document.querySelector(
+    'div[data-test-selector="live-notifications-toggle"]'
+  );
+  if (!element) {
+    logger.info("Unable to find target position for the button.");
+    return false;
+  }
+
   const div = document.createElement("div");
   div.id = divId;
+  div.style.marginLeft = "1rem";
 
-  const target = getElementByXpath(XPATH_TARGET_BUTTON_LOCATION);
-  target ? target.appendChild(div) : document.body.appendChild(div);
+  const target: HTMLElement = element.parentElement!;
+  target.appendChild(div);
   ReactDOM.render(<FavoriteButton />, div);
-  favoriteButtonShown = true;
   logger.debug("Favorite button added.");
-};
+  return true;
+}
 
-const removeFavoriteButton = (divId: string) => {
+function removeFavoriteButton(divId: string): boolean {
   logger.info("Removing Favorite button...");
   const element = document.getElementById(divId);
-  element?.parentNode?.removeChild(element);
-  favoriteButtonShown = false;
-  logger.debug("Favorite button removed.");
-};
+  if (element && element.parentNode) {
+    element.parentNode.removeChild(element);
+    logger.info("Favorite button removed.");
+    return true;
+  }
+  logger.info("Unable to remove Favorite button.");
+  return false;
+}
 
-const checkFollowing = (): boolean => {
-  const notificationBtn: any = getElementByXpath(XPATH_NOTIFICATIONS);
-  return notificationBtn ? notificationBtn["disabled"] === false : false;
-};
+function checkFollowing(): boolean {
+  // Check if the Follow button is in the page.
+  // This button is only present when the user is not following the channel.
+  if (document.querySelector('button[data-a-target="follow-button"]')) {
+    return false;
+  }
+
+  // Check if the notifications button is available.
+  // This button is always in the DOM, but only enable on a followed channel.
+  const q = 'button[data-a-target="notifications-toggle"]';
+  const notificationBtn: HTMLButtonElement | null = document.querySelector(q);
+  return !!notificationBtn && notificationBtn.disabled === false;
+}
+
+function checkfavoriteButton(): boolean {
+  return document.querySelector(`#${FAVORITE_BUTTON_ID}`) !== null;
+}
+
+function addRemoveBtn() {
+  const isFollowing = checkFollowing();
+  const isButtonDisplayed = checkfavoriteButton();
+
+  // logger.debug("isFollowing: ", isFollowing, "checkfavoriteButton: ", isButtonDisplayed);
+
+  if (isFollowing && !isButtonDisplayed) {
+    renderFavoriteButton(FAVORITE_BUTTON_ID);
+  }
+
+  // Check if the channel was just now unfollowed
+  if (!isFollowing && isButtonDisplayed) {
+    removeFavoriteButton(FAVORITE_BUTTON_ID);
+  }
+}
 
 const sorter = new ChannelSorter(500, 250);
 
@@ -80,39 +116,7 @@ browser.runtime.onMessage.addListener((message) => {
     console.log(intervalId);
     // setInterval(() => sorter.update(), REFRESH_INTERVAL)
     // setInterval(() => sortFollowed(), REFRESH_INTERVAL)
-  }
-
-  const isFollowing = checkFollowing();
-
-  if (
-    isFollowing &&
-    !favoriteButtonShown &&
-    !document.getElementById(FAVORITE_BUTTON_ID)
-  ) {
-    renderFavoriteButton(FAVORITE_BUTTON_ID);
-  }
-
-  // Check if the channel was just now unfollowed
-  if (!isFollowing && favoriteButtonShown) {
-    removeFavoriteButton(FAVORITE_BUTTON_ID);
-    // browser.runtime
-    //   .sendMessage({ action: "unfollow" })
-    //   .then((resp) => logger.info(resp));
-  }
-
-  // TODO: change variable name for the message sent from background
-  // TODO: This has some duplicate code inside ToggleButton which should be combined in a single place.
-  if (message.status === true) {
-    const element = document.getElementById(FAVORITE_BUTTON_ID);
-    if (element)
-      element.style.backgroundColor = usesDarkTheme()
-        ? buttonMainColor.toHtml(0.75)
-        : new Color(175, 41, 255).toHtml();
-  }
-
-  if (message.status === false) {
-    const element = document.getElementById(FAVORITE_BUTTON_ID);
-    if (element) element.style.backgroundColor = buttonMainColor.toHtml(0.0);
+    setInterval(addRemoveBtn, 1000);
   }
 });
 

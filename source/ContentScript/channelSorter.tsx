@@ -267,24 +267,22 @@ export default class ChannelSorter {
     if (showMore) showMore.click();
   }
 
+  // Get the list of all live followed channels
   getSortableChannels(): HTMLElement[] {
-    // Get the list of all live followed channels
     this.expandChannelList();
 
     const container = this.container as HTMLElement;
     const children = container.children
       ? Array.from(container.children)
       : new Array();
-    const size = children.length;
 
-    for (let i = 0; i < size; i++) {
-      const element: HTMLElement = children[children.length - 1];
-      if (!element.textContent?.endsWith("Offline")) {
-        break;
-      }
-      children.pop();
+    const onlineChannels: HTMLElement[] = [];
+    children.forEach((element: HTMLElement) => {
+      if (!element.querySelector(".side-nav-card__avatar--offline")) {
+        onlineChannels.push(element);
     }
-    return children;
+    });
+    return onlineChannels;
   }
 
   parseViewers(viewerCount: string | null): number {

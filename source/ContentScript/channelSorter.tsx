@@ -271,8 +271,7 @@ export default class ChannelSorter {
     // Get the list of all live followed channels
     this.expandChannelList();
 
-    // FIXME: This should be using this.container instead of getting it again.
-    const container = getElementByXpath(XPATH_FOLLOWED_LIST) as HTMLElement;
+    const container = this.container as HTMLElement;
     const children = container.children
       ? Array.from(container.children)
       : new Array();

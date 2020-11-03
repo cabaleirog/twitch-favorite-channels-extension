@@ -149,22 +149,32 @@ export default class ChannelSorter {
     this.sortGroup(favoriteChannels);
     this.sortGroup(otherChannels);
 
+    // TODO: Improve this comparisons
     // Check if already sorted on the page
     let alreadySorted = true;
-    favoriteChannels.forEach((element, idx) => {
-      if (element.currentPosition !== idx) {
-        alreadySorted = false;
-        // break   // FIXME: Jump target cannot cross function boundary.ts(1107)
-      }
-    });
+
+    if (favoriteChannels.length !== this.lastSortedLists.favorites.length) {
+      alreadySorted = false;
+    }
 
     if (alreadySorted) {
-      otherChannels.forEach((element, idx) => {
+      for (let idx = 0; idx < favoriteChannels.length; idx++) {
+        const element = favoriteChannels[idx];
+      if (element.currentPosition !== idx) {
+        alreadySorted = false;
+          break;
+        }
+      }
+      }
+
+    if (alreadySorted) {
+      for (let idx = 0; idx < otherChannels.length; idx++) {
+        const element = otherChannels[idx];
         if (element.currentPosition !== favoriteChannels.length + idx) {
           alreadySorted = false;
-          // break  // FIXME: Jump target cannot cross function boundary.ts(1107)
+          break;
         }
-      });
+        }
     }
 
     // If the list is already sorted, there is no need to refresh.

@@ -4,8 +4,12 @@ import { browser } from "webextension-polyfill-ts";
 import { getChannelsFromStorage, urlToChannel } from "../utils";
 import { getLogger } from "../utils/logging";
 import { usesDarkTheme } from "../utils/twitch";
+import { arrayToRGBA, COLORS } from "./colors";
 
 const logger = getLogger("ContentScript");
+
+// TODO: Add a variable to storage with user defined colors, and listen for changes on those to update the button.
+let colors = COLORS;
 
 // browser.runtime.onMessage.addListener((message, sender) => {
 //   logger.debug("Listener on button.tsx");
@@ -20,11 +24,14 @@ const logger = getLogger("ContentScript");
 //   }
 // });
 
-class FavoriteButton extends Component<{}, { isFavorite: boolean, color: string }> {
+class FavoriteButton extends Component<
+  {},
+  { isFavorite: boolean; color: string }
+> {
   constructor(props: any) {
     super(props);
     this.handleClick = this.handleClick.bind(this);
-    this.state = { isFavorite: false, color: '' };
+    this.state = { isFavorite: false, color: "" };
     logger.debug(this);
   }
 
@@ -40,17 +47,15 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean, color: string 
         this.updateBackgroundColor();
       });
     }
-    logger.debug(this)
+    logger.debug(this);
   }
-  
+
   updateBackgroundColor() {
-    let bgColor: string
-    if (this.state.isFavorite) {
-      bgColor = usesDarkTheme() ? "rgba(0, 75, 0, 1.0)" : "rgba(30, 165, 20, 0.3)";
-    } else {
-      bgColor = usesDarkTheme() ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.0)";
-    }
-    this.setState({color: bgColor});
+    const theme = usesDarkTheme() ? colors.dark : colors.light;
+    const btnColor = arrayToRGBA(
+      this.state.isFavorite ? theme.button.enabled : theme.button.disabled
+    );
+    this.setState({ color: btnColor });
   }
 
   async handleClick() {
@@ -65,10 +70,10 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean, color: string 
         logger.debug(resp);
         logger.debug(this);
         if (resp === "added") {
-          this.setState({isFavorite: true});
+          this.setState({ isFavorite: true });
           this.updateBackgroundColor();
         } else if (resp === "removed") {
-          this.setState({isFavorite: false})
+          this.setState({ isFavorite: false });
           this.updateBackgroundColor();
         } else {
           logger.debug(
@@ -82,7 +87,7 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean, color: string 
     return (
       <Button
         className="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--secondary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"
-        style={{backgroundColor: this.state.color, padding: "10px"}}
+        style={{ backgroundColor: this.state.color, padding: "10px" }}
         variant="primary"
         onClick={this.handleClick}
       >
@@ -103,7 +108,7 @@ class FavoriteButton extends Component<{}, { isFavorite: boolean, color: string 
             />
           </svg>
         </figure>
-        <span style={{paddingLeft: "5px"}}>Favorite</span>
+        <span style={{ paddingLeft: "5px" }}>Favorite</span>
       </Button>
     );
   }

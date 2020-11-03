@@ -1,13 +1,16 @@
 import { getLogger } from "../utils/logging";
 import {
-  favoriteChannelColor,
   Stream,
   getChannelsFromStorage,
   getElementByXpath,
   XPATH_FOLLOWED_LIST,
 } from "../utils";
+import { arrayToRGBA, COLORS } from "./colors";
+import { usesDarkTheme } from "../utils/twitch";
 
 const logger = getLogger("ContentScript");
+
+let colors = COLORS;
 
 export default class ChannelSorter {
   // checkInterval: Milliseconds between checks; if value is zero, will check every time its called.
@@ -197,17 +200,17 @@ export default class ChannelSorter {
       const row = liveStreams[idx];
       const parentNode = row.div.parentNode;
       if (row.isFavorite && parentNode) {
-        parentNode.removeChild(row.div);
-        this.container?.insertBefore(row.div, this.container?.childNodes[0]);
-        row.div.style.backgroundColor = favoriteChannelColor.toHtml();
-        sortedFavorites += 1;
+          parentNode.removeChild(row.div);
+          this.container?.insertBefore(row.div, this.container?.childNodes[0]);
+          row.div.style.backgroundColor = arrayToRGBA(usesDarkTheme() ? colors.dark.sidebar : colors.light.sidebar) ;
+          sortedFavorites += 1;
       } else {
         parentNode?.removeChild(row.div);
         this.container?.insertBefore(
           row.div,
           this.container?.childNodes[sortedFavorites]
         );
-        row.div.style.backgroundColor = favoriteChannelColor.toHtml(0.0); // FIXME: Workaround to fix the issue of deleted favorites for now.
+        row.div.style.backgroundColor = "rgba(0, 0, 0, 0.0)"; // FIXME: Workaround to fix the issue of deleted favorites for now.
       }
     }
 

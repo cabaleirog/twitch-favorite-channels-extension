@@ -136,6 +136,21 @@ export default class ChannelSorter {
       info.isFavorite = !!info.channel && favorites.has(info.channel);
       info.currentPosition = idx;
 
+      // Check for the case when the sidebar has no viewcount information, mostly when is collapsed.
+      // const isOffline = !!element.querySelector(
+      //   ".side-nav-card__avatar--offline"
+      // );
+
+      // if (isOffline) {
+      //   // Make sure offline channels are left at the bottom of the second list.
+      //   info.viewers = info.viewers !== Number.NaN ? info.viewers : -1;
+      //   logger.debug(
+      //     `Offline channel (${info.channel}) should not reach this step`,
+      //     info
+      //   );
+      // }
+
+      // if (info.isFavorite && !isOffline) {
       if (info.isFavorite) {
         favoriteChannels.push(info);
       } else {
@@ -160,12 +175,12 @@ export default class ChannelSorter {
     if (alreadySorted) {
       for (let idx = 0; idx < favoriteChannels.length; idx++) {
         const element = favoriteChannels[idx];
-      if (element.currentPosition !== idx) {
-        alreadySorted = false;
+        if (element.currentPosition !== idx) {
+          alreadySorted = false;
           break;
         }
       }
-      }
+    }
 
     if (alreadySorted) {
       for (let idx = 0; idx < otherChannels.length; idx++) {
@@ -174,7 +189,7 @@ export default class ChannelSorter {
           alreadySorted = false;
           break;
         }
-        }
+      }
     }
 
     // If the list is already sorted, there is no need to refresh.
@@ -209,11 +224,15 @@ export default class ChannelSorter {
     for (let idx = liveStreams.length - 1; idx >= 0; idx--) {
       const row = liveStreams[idx];
       const parentNode = row.div.parentNode;
-      if (row.isFavorite && parentNode) {
-          parentNode.removeChild(row.div);
-          this.container?.insertBefore(row.div, this.container?.childNodes[0]);
-          row.div.style.backgroundColor = arrayToRGBA(usesDarkTheme() ? colors.dark.sidebar : colors.light.sidebar) ;
-          sortedFavorites += 1;
+      if (
+        row.isFavorite &&
+        parentNode &&
+        !row.div.querySelector(".side-nav-card__avatar--offline")
+      ) {
+        parentNode.removeChild(row.div);
+        this.container?.insertBefore(row.div, this.container?.childNodes[0]);
+        row.div.style.backgroundColor = arrayToRGBA(usesDarkTheme() ? colors.dark.sidebar : colors.light.sidebar) ;
+        sortedFavorites += 1;
       } else {
         parentNode?.removeChild(row.div);
         this.container?.insertBefore(
@@ -263,7 +282,7 @@ export default class ChannelSorter {
     // Handle the cases when the sidebar is collapsed or user is not logged in.
     // if (showMore === null || typeof showMore === "undefined") return false;   // XXX: Can be written in a better way
     if (!showMore) return false;
-    
+
     // return getElementByXpath('//*[@data-a-target="side-nav-live-status"]//span[text()="Offline"]') !== null
     if (!this.container) return false;
     const viewCounts = Array.from(
@@ -290,7 +309,7 @@ export default class ChannelSorter {
     children.forEach((element: HTMLElement) => {
       if (!element.querySelector(".side-nav-card__avatar--offline")) {
         onlineChannels.push(element);
-    }
+      }
     });
     return onlineChannels;
   }

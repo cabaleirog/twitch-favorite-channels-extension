@@ -1,6 +1,10 @@
-// console.log(arrayToRGBA([12, 32, 45, 0.1]))
-export function arrayToRGBA(array: number[]) {
-  return `rgba(${array.join(",")})`;
+/**
+ * Create an rgba string from an array.
+ * @param {number[]} array - ...
+ * @return {string} RGBA color string.
+ */
+export function arrayToRGBA(array: number[]): string {
+  return `rgba(${array.join(',')})`;
 }
 
 export const COLORS = {

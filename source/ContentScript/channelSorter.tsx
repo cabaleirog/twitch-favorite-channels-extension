@@ -1,32 +1,39 @@
-import { getLogger } from "../utils/logging";
+import {getLogger} from '../utils/logging';
 import {
   Stream,
   getChannelsFromStorage,
   getElementByXpath,
   XPATH_FOLLOWED_LIST,
-} from "../utils";
-import { arrayToRGBA, COLORS } from "./colors";
-import { usesDarkTheme } from "../utils/twitch";
+} from '../utils';
+import {arrayToRGBA, COLORS} from './colors';
+import {usesDarkTheme} from '../utils/twitch';
 
-const logger = getLogger("ContentScript");
+const logger = getLogger('ContentScript');
 
-let colors = COLORS;
+const colors = COLORS;
 
+/**
+ * Channel sorter
+ */
 export default class ChannelSorter {
-  // checkInterval: Milliseconds between checks; if value is zero, will check every time its called.
-  lastExecution: Date | null; // Last this the function was called (Based on the interval)
+  lastExecution: Date | null; // Last time the function was called (interval)
   lastUpdated: Date | null; // Last time the page was modified
   updateInterval: number;
   processInterval: number; // The main thread, this will be used as a timeout
   container?: HTMLElement;
-  lastSortedLists: { favorites: Stream[]; others: Stream[] };
+  lastSortedLists: {favorites: Stream[]; others: Stream[]};
   isInitialized: boolean;
   intervalId: any;
   favoritesSet: Set<string>;
 
+  /**
+   * Creates an instance of channel sorter.
+   * @param {number} updateInterval - ...
+   * @param {number} processInterval - ...
+   */
   constructor(updateInterval: number = 0, processInterval: number = 100) {
     this.updateInterval = updateInterval;
-    this.lastSortedLists = { favorites: new Array(), others: new Array() };
+    this.lastSortedLists = {favorites: [], others: []};
     this.lastExecution = null;
     this.lastUpdated = null;
     this.intervalId = null;
@@ -35,19 +42,24 @@ export default class ChannelSorter {
     this.favoritesSet = new Set();
   }
 
-  // Returns the intervalId or null if initialization failed
-  initialize(): any {
+  /**
+   * Initialize the sorter process.
+   * @return {number} The interval ID.
+   */
+  initialize(): number {
     if (!this.isInitialized) {
       logger.info(`Creating main process using setInterval.`);
       logger.info(this);
       this.isInitialized = true;
       this.intervalId = setInterval(() => this.update(), this.processInterval);
-      // this.update()
       logger.info(`Channel sorter initialized. IntervalID: ${this.intervalId}`);
     }
     return this.intervalId;
   }
 
+  /**
+   * Stop the sorter process.
+   */
   stop(): void {
     if (this.intervalId) {
       clearInterval(this.intervalId);
@@ -57,6 +69,9 @@ export default class ChannelSorter {
     }
   }
 
+  /**
+   * Update the list of followed channels in the sidebar.
+   */
   update(): void {
     // If update is called, but it hasnt been initialized, initialize it.
     if (!this.isInitialized) this.initialize();
@@ -68,26 +83,30 @@ export default class ChannelSorter {
     if (this.container) {
       this.sortElements().then((resp) => {
         if (resp) {
-          logger.debug("List has been refreshed");
+          logger.debug('List has been refreshed');
           logger.debug(this);
         }
       });
     }
-
-    // setTimeout(() => this.update(), this.processInterval)
   }
 
+  /**
+   * Get the Favorite channels from storage.
+   * @return {Promise<Set<string>>} Channels the user has marked as favorite.
+   */
   private async getFavorites(): Promise<Set<string>> {
-    // TODO: Optimize this, currently polling every time it updates the values from local storage
     const mapping: Set<string> = new Set();
     const channels = await getChannelsFromStorage();
-    for (let item of channels) {
+    for (const item of channels) {
       mapping.add(item);
     }
     return mapping;
   }
 
-  // returns true if the list was sorted, false if it was skipped
+  /**
+   * Sort the channels.
+   * @return {Promise<boolean>} True if the list was sorted, false when skipped.
+   */
   private async sortElements(): Promise<boolean> {
     if (this.timeSinceLast() < this.updateInterval) return false;
 
@@ -103,23 +122,22 @@ export default class ChannelSorter {
     }
 
     // Separate into groups for favorites channels and the rest
-    const favoriteChannels: Stream[] = new Array();
-    const otherChannels: Stream[] = new Array();
+    const favoriteChannels: Stream[] = [];
+    const otherChannels: Stream[] = [];
 
     const favorites = await this.getFavorites();
     liveChannels.forEach((element: HTMLElement, idx: number) => {
-      let info: Stream = { div: element, viewers: Number.NaN };
+      const info: Stream = {div: element, viewers: Number.NaN};
 
       // TODO: If the sidebar is collapsed, viewers will be NaN and we wont be able to sort.
       // Maybe refactor this to make 2 groups first, and then consider the numbers.
       // <div data-test-selector="side-nav-card-collapsed"> gives an indication of the sidebar status.
 
       info.viewers = this.parseViewers(
-        element.getElementsByTagName("span")[0]?.textContent
-      );
-      info.url = element.getElementsByTagName("a")[0]?.href;
+          element.getElementsByTagName('span')[0]?.textContent);
+      info.url = element.getElementsByTagName('a')[0]?.href;
 
-      let p = element.getElementsByTagName("p");
+      const p = element.getElementsByTagName('p');
       info.channel = p[0]?.textContent?.trim().toLowerCase();
 
       // FIXME: Exception has occurred: TypeError: Cannot read property 'textContent' of undefined (After minimizing the sidebar)
@@ -128,7 +146,7 @@ export default class ChannelSorter {
 
       if (!info.channel && info.url) {
         // Most likely the sidebar is collapsed; so we can use the url to extract the channel name.
-        const chunks = info.url.split("/");
+        const chunks = info.url.split('/');
         if (chunks) info.channel = chunks[chunks.length - 1];
       }
 
@@ -208,11 +226,16 @@ export default class ChannelSorter {
     return true;
   }
 
-  private updateFollowedListElements(favorites: Stream[], others: Stream[]) {
+  /**
+   * Updates followed list elements
+   * @param {Stream[]} favorites - ...
+   * @param {Stream[]} others - ...
+   */
+  private updateFollowedListElements(favorites: Stream[], others: Stream[]): void {
     // TODO: Optimize this to avoid swaping nodes which are already in the right place
 
     // FIXME: Quick hack to have the old code working
-    let liveStreams = new Array();
+    const liveStreams: Stream[] = [];
     favorites.forEach((element) => {
       liveStreams.push(element);
     });
@@ -220,26 +243,26 @@ export default class ChannelSorter {
       liveStreams.push(element);
     });
 
-    let sortedFavorites: number = 0;
+    let sortedFavorites = 0;
     for (let idx = liveStreams.length - 1; idx >= 0; idx--) {
       const row = liveStreams[idx];
       const parentNode = row.div.parentNode;
       if (
         row.isFavorite &&
         parentNode &&
-        !row.div.querySelector(".side-nav-card__avatar--offline")
+        !row.div.querySelector('.side-nav-card__avatar--offline')
       ) {
         parentNode.removeChild(row.div);
         this.container?.insertBefore(row.div, this.container?.childNodes[0]);
-        row.div.style.backgroundColor = arrayToRGBA(usesDarkTheme() ? colors.dark.sidebar : colors.light.sidebar) ;
+        row.div.style.backgroundColor = arrayToRGBA(
+            usesDarkTheme() ? colors.dark.sidebar : colors.light.sidebar);
         sortedFavorites += 1;
       } else {
         parentNode?.removeChild(row.div);
         this.container?.insertBefore(
-          row.div,
-          this.container?.childNodes[sortedFavorites]
-        );
-        row.div.style.backgroundColor = "rgba(0, 0, 0, 0.0)"; // FIXME: Workaround to fix the issue of deleted favorites for now.
+            row.div, this.container?.childNodes[sortedFavorites]);
+        // FIXME: Workaround to fix the issue of deleted favorites for now.
+        row.div.style.backgroundColor = 'rgba(0, 0, 0, 0.0)';
       }
     }
 
@@ -248,23 +271,29 @@ export default class ChannelSorter {
     // logger.debug(`sortFollow function completed in ${elapsed} milliseconds.`)
   }
 
+  /**
+   * TODO: Document this.
+   * @param {Stream[]} group - ...
+   */
   private sortGroup(group: Stream[]): void {
     // FIXME: Quick and dirty way to sort, implement something else.
     // Sort in-place
-    group.sort(
-      (a, b) =>
-        (b.isFavorite ? 1000000000 : 1) +
-        b.viewers -
-        ((a.isFavorite ? 1000000000 : 1) + a.viewers)
-    );
+    group.sort((a, b) => (b.isFavorite ? 1000000000 : 1) + b.viewers - ((a.isFavorite ? 1000000000 : 1) + a.viewers));
   }
 
+  /**
+   * Returns the time in milliseconds since the last sorting process was ran.
+   * @return {number} Milliseconds since last execution.
+   */
   private timeSinceLast(): number {
-    // Returns the time in milliseconds since the last sorting process was ran.
     if (this.lastExecution === null) return this.updateInterval;
     return new Date().getTime() - this.lastExecution.getTime();
   }
 
+  /**
+   * Expand the list of followed channels on the sidebar.
+   * @param {number} iterations - Max number of times to expand the list.
+   */
   expandChannelList(iterations: number = 10): void {
     for (let i = 0; i < iterations; i++) {
       if (!this.canExpandFurther()) return;
@@ -272,10 +301,18 @@ export default class ChannelSorter {
     }
   }
 
+  /**
+   * TODO: Document this.
+   * @return {HTMLElement|null} ...
+   */
   private getShowMoreElement(): HTMLElement | null {
     return document.querySelector('[data-test-selector="ShowMore"]');
   }
 
+  /**
+   * TODO: Document this.
+   * @return {boolean} True if there are still more hidden online channels.
+   */
   private canExpandFurther(): boolean {
     const showMore = this.getShowMoreElement();
 
@@ -285,47 +322,57 @@ export default class ChannelSorter {
 
     // return getElementByXpath('//*[@data-a-target="side-nav-live-status"]//span[text()="Offline"]') !== null
     if (!this.container) return false;
-    const viewCounts = Array.from(
-      this.container?.getElementsByTagName("span")
-    ).map((e) => e.textContent);
-    return !viewCounts.some((v) => v?.trim().toLowerCase() === "offline");
+    const viewCounts = Array.from(this.container?.getElementsByTagName('span')).map((e) => e.textContent);
+    return !viewCounts.some((v) => v?.trim().toLowerCase() === 'offline');
   }
 
+  /**
+   * Click on the `Show More` element to expand the list of followed channels.
+   */
   private showMore(): void {
     const showMore = this.getShowMoreElement();
     if (showMore) showMore.click();
   }
 
-  // Get the list of all live followed channels
+  /**
+   * Get the list of all live followed channels
+   * @return {HTMLElement[]} ...
+   */
   getSortableChannels(): HTMLElement[] {
     this.expandChannelList();
 
     const container = this.container as HTMLElement;
-    const children = container.children
-      ? Array.from(container.children)
-      : new Array();
+    const children = container.children ? Array.from(container.children) : [];
 
     const onlineChannels: HTMLElement[] = [];
-    children.forEach((element: HTMLElement) => {
-      if (!element.querySelector(".side-nav-card__avatar--offline")) {
-        onlineChannels.push(element);
+    children.forEach((element) => {
+      if (!element.querySelector('.side-nav-card__avatar--offline')) {
+        onlineChannels.push(element as HTMLElement);
       }
     });
     return onlineChannels;
   }
 
+  /**
+   * Parse the total number of viewers from the string on the sidebar row.
+   * If the channel is offline, or the value is null, as in the case when the
+   * sidebar is collapsed, then NaN is returned.
+   * @param {string|null} viewerCount - The view count string.
+   * @return {number} Channel's view count, or NaN if unable to parse or offline.
+   */
   parseViewers(viewerCount: string | null): number {
-    if (viewerCount === null || typeof viewerCount === "undefined")
-      return Number.NaN;
-
-    let viewers = viewerCount.trim().toUpperCase();
-    if (viewers === "OFFLINE" || viewers === "") {
+    if (viewerCount === null || typeof viewerCount === 'undefined') {
       return Number.NaN;
     }
-    if (viewers.endsWith("K")) {
+
+    const viewers = viewerCount.trim().toUpperCase();
+    if (viewers === 'OFFLINE' || viewers === '') {
+      return Number.NaN;
+    }
+    if (viewers.endsWith('K')) {
       return 1000 * Number.parseFloat(viewers.substr(0, viewers.length - 1));
     }
-    if (viewers.endsWith("M")) {
+    if (viewers.endsWith('M')) {
       return 1000000 * Number.parseFloat(viewers.substr(0, viewers.length - 1));
     }
     return Number.parseInt(viewers);

@@ -36,14 +36,14 @@ class FavoriteButton extends Component<{}, ButtonState> {
    * React Component Lifecycle method, called immediately after a component is
    * mounted. Setting state here will trigger re-rendering.
    */
-  componentDidMount(): void {
+  public componentDidMount(): void {
     this.updateState();
   }
 
   /**
    * Update the state of the button using the storage information.
    */
-  updateState(): void {
+  private updateState(): void {
     const channel = urlToChannel(window.location.href);
     if (channel) {
       getChannelsFromStorage().then((resp) => {
@@ -57,8 +57,7 @@ class FavoriteButton extends Component<{}, ButtonState> {
   /**
    * Update the background color of the button.
    */
-  updateBackgroundColor(): void {
-    const theme = usesDarkTheme() ? colors.dark : colors.light;
+  private updateBackgroundColor(): void {
     const btnColor = arrayToRGBA(
         this.state.isFavorite ? theme.button.enabled : theme.button.disabled);
     this.setState({color: btnColor});
@@ -68,7 +67,7 @@ class FavoriteButton extends Component<{}, ButtonState> {
    * Handle click event on the button.
    * @return {Promise<void>} a promise.
    */
-  async handleClick(): Promise<void> {
+  public async handleClick(): Promise<void> {
     logger.info('Toggling Favorite...');
     await browser.runtime
         .sendMessage({source: 'favorite button', action: 'toggle', status: ''})
@@ -92,7 +91,7 @@ class FavoriteButton extends Component<{}, ButtonState> {
    * Render Favorite button.
    * @return {JSX.Element} Button element.
    */
-  render(): JSX.Element {
+  public render(): JSX.Element {
     return (
       <Button
         className="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--secondary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"

@@ -46,7 +46,7 @@ export default class ChannelSorter {
    * Initialize the sorter process.
    * @return {number} The interval ID.
    */
-  initialize(): number {
+  public initialize(): number {
     if (!this.isInitialized) {
       logger.info(`Creating main process using setInterval.`);
       logger.info(this);
@@ -60,7 +60,7 @@ export default class ChannelSorter {
   /**
    * Stop the sorter process.
    */
-  stop(): void {
+  public stop(): void {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
@@ -72,7 +72,7 @@ export default class ChannelSorter {
   /**
    * Update the list of followed channels in the sidebar.
    */
-  update(): void {
+  private update(): void {
     // If update is called, but it hasnt been initialized, initialize it.
     if (!this.isInitialized) this.initialize();
 
@@ -294,7 +294,7 @@ export default class ChannelSorter {
    * Expand the list of followed channels on the sidebar.
    * @param {number} iterations - Max number of times to expand the list.
    */
-  expandChannelList(iterations: number = 10): void {
+  private expandChannelList(iterations: number = 10): void {
     for (let i = 0; i < iterations; i++) {
       if (!this.canExpandFurther()) return;
       this.showMore();
@@ -338,7 +338,7 @@ export default class ChannelSorter {
    * Get the list of all live followed channels
    * @return {HTMLElement[]} ...
    */
-  getSortableChannels(): HTMLElement[] {
+  private getSortableChannels(): HTMLElement[] {
     this.expandChannelList();
 
     const container = this.container as HTMLElement;
@@ -360,7 +360,7 @@ export default class ChannelSorter {
    * @param {string|null} viewerCount - The view count string.
    * @return {number} Channel's view count, or NaN if unable to parse or offline.
    */
-  parseViewers(viewerCount: string | null): number {
+  private parseViewers(viewerCount: string | null): number {
     if (viewerCount === null || typeof viewerCount === 'undefined') {
       return Number.NaN;
     }

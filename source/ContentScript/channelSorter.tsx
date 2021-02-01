@@ -150,25 +150,9 @@ export default class ChannelSorter {
         if (chunks) info.channel = chunks[chunks.length - 1];
       }
 
-      // info.isFavorite = info.channel ? favorites.has(info.channel) : false
       info.isFavorite = !!info.channel && favorites.has(info.channel);
       info.currentPosition = idx;
 
-      // Check for the case when the sidebar has no viewcount information, mostly when is collapsed.
-      // const isOffline = !!element.querySelector(
-      //   ".side-nav-card__avatar--offline"
-      // );
-
-      // if (isOffline) {
-      //   // Make sure offline channels are left at the bottom of the second list.
-      //   info.viewers = info.viewers !== Number.NaN ? info.viewers : -1;
-      //   logger.debug(
-      //     `Offline channel (${info.channel}) should not reach this step`,
-      //     info
-      //   );
-      // }
-
-      // if (info.isFavorite && !isOffline) {
       if (info.isFavorite) {
         favoriteChannels.push(info);
       } else {
@@ -247,11 +231,7 @@ export default class ChannelSorter {
     for (let idx = liveStreams.length - 1; idx >= 0; idx--) {
       const row = liveStreams[idx];
       const parentNode = row.div.parentNode;
-      if (
-        row.isFavorite &&
-        parentNode &&
-        !row.div.querySelector('.side-nav-card__avatar--offline')
-      ) {
+      if (row.isFavorite && parentNode) {
         parentNode.removeChild(row.div);
         this.container?.insertBefore(row.div, this.container?.childNodes[0]);
         row.div.style.backgroundColor = arrayToRGBA(
@@ -265,10 +245,6 @@ export default class ChannelSorter {
         row.div.style.backgroundColor = 'rgba(0, 0, 0, 0.0)';
       }
     }
-
-    // const endTime = new Date()
-    // const elapsed = (endTime.getTime() - startTime.getTime())
-    // logger.debug(`sortFollow function completed in ${elapsed} milliseconds.`)
   }
 
   /**
@@ -314,6 +290,7 @@ export default class ChannelSorter {
    * @return {boolean} True if there are still more hidden online channels.
    */
   private canExpandFurther(): boolean {
+    // TODO: Use the class name instead of the offline text to determine if it can be expanded.
     const showMore = this.getShowMoreElement();
 
     // Handle the cases when the sidebar is collapsed or user is not logged in.
@@ -322,7 +299,7 @@ export default class ChannelSorter {
 
     // return getElementByXpath('//*[@data-a-target="side-nav-live-status"]//span[text()="Offline"]') !== null
     if (!this.container) return false;
-    const viewCounts = Array.from(this.container?.getElementsByTagName('span')).map((e) => e.textContent);
+    const viewCounts = Array.from(this.container.getElementsByTagName('span')).map((e) => e.textContent);
     return !viewCounts.some((v) => v?.trim().toLowerCase() === 'offline');
   }
 
@@ -330,8 +307,8 @@ export default class ChannelSorter {
    * Click on the `Show More` element to expand the list of followed channels.
    */
   private showMore(): void {
-    const showMore = this.getShowMoreElement();
-    if (showMore) showMore.click();
+    const element = this.getShowMoreElement();
+    if (element) element.click();
   }
 
   /**

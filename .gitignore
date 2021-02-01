@@ -1,6 +1,3 @@
-# ignore haters
-haters/
-
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json

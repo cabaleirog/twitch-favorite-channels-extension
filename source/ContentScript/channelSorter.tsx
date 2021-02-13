@@ -173,8 +173,8 @@ export default class ChannelSorter {
     // TODO: Pre-check the sizes of the previous and current favorite list to quickly determine if needs sorted.
 
     // Sort the favorites
-    this.sortGroup(favoriteChannels);
-    this.sortGroup(otherChannels);
+    this.sortByViewerCount(favoriteChannels);
+    this.sortByViewerCount(otherChannels);
 
     // TODO: Improve this comparisons
     // Check if already sorted on the page
@@ -257,13 +257,11 @@ export default class ChannelSorter {
   }
 
   /**
-   * TODO: Document this.
-   * @param {Stream[]} group - ...
+   * Sort in-place by viewer count.
+   * @param {Stream[]} streams - List of streams to be sorted.
    */
-  private sortGroup(group: Stream[]): void {
-    // FIXME: Quick and dirty way to sort, implement something else.
-    // Sort in-place
-    group.sort((a, b) => (b.isFavorite ? 1000000000 : 1) + b.viewers - ((a.isFavorite ? 1000000000 : 1) + a.viewers));
+  private sortByViewerCount(streams: Stream[]): void {
+    streams.sort((a, b) => b.viewers - a.viewers);
   }
 
   /**

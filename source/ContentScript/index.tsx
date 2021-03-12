@@ -118,6 +118,8 @@ browser.runtime.onMessage.addListener((message): void => {
 
   // Do nothing until page is fully loaded.
   if (!(isPageLoaded || isPageLoadedNotification)) {
+    // Attempt to remove the button when the page loads to solve issue with the nature of SPA.
+    removeFavoriteButton(FAVORITE_BUTTON_ID);
     logger.debug(
         `Page still loading (Loaded: ${isPageLoaded} Loaded Notification ${isPageLoadedNotification})...`);
     return;

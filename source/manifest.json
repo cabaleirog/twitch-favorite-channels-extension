@@ -68,7 +68,8 @@
     ],
     "exclude_globs": [
       "*://www.twitch.tv/popout/*",
-      "*://www.twitch.tv/moderator/*"
+      "*://www.twitch.tv/moderator/*",
+      "*://www.twitch.tv/videos/*"
     ],
     "js": [
       "js/contentScript.bundle.js"

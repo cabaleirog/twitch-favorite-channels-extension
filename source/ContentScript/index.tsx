@@ -31,7 +31,7 @@ function renderFavoriteButton(divId: string): boolean {
   logger.info('Creating Favorite button...');
 
   const element = document.querySelector(
-      'div[data-test-selector="live-notifications-toggle"]');
+      'div[data-target="channel-header-right"]');
   if (!element) {
     logger.info('Unable to find target position for the button.');
     return false;
@@ -39,12 +39,10 @@ function renderFavoriteButton(divId: string): boolean {
 
   const div = document.createElement('div');
   div.id = divId;
-  div.style.marginLeft = '1rem';
-
-  const target: HTMLElement = element.parentElement!;
-  target.appendChild(div);
+  div.style.marginRight = '1rem';
   ReactDOM.render(<FavoriteButton />, div);
-  logger.debug('Favorite button added.');
+  element.insertBefore(div, element.childNodes[1]);
+  logger.debug('Favorite button created.');
   return true;
 }
 

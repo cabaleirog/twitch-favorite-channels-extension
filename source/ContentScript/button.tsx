@@ -92,8 +92,7 @@ class FavoriteButton extends Component<{}, ButtonState> {
   public render(): JSX.Element {
     return (
       <Button
-        className="tw-align-items-center tw-align-middle tw-border-bottom-left-radius-medium tw-border-bottom-right-radius-medium tw-border-top-left-radius-medium tw-border-top-right-radius-medium tw-core-button tw-core-button--secondary tw-full-width tw-inline-flex tw-interactive tw-justify-content-center tw-overflow-hidden tw-relative"
-        style={{backgroundColor: this.state.color, padding: '2.5px calc(0.8rem)'}}
+        style={{backgroundColor: this.state.color, padding: '2.5px calc(0.8rem)', display: 'flex', alignItems: 'center', borderRadius: '0.4rem'}}
         variant="primary"
         onClick={this.handleClick}
       >

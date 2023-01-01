@@ -5,7 +5,7 @@ export const FAVORITE_BUTTON_ID = 'twitch-favorite-channels-extension';
 
 // Element containing the list of followed channels.
 export const XPATH_FOLLOWED_LIST =
-  '//*[@id="sideNav"]//div[contains(@class, "tw-transition-group")]';
+  '//*[@id="side-nav"]//div[contains(@class, "tw-transition-group")]';
 
 // Place where the Favorite button will be placed.
 export const XPATH_TARGET_BUTTON_LOCATION =

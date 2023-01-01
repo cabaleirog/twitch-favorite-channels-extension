@@ -41,7 +41,7 @@ function renderFavoriteButton(divId: string): boolean {
   div.id = divId;
   div.style.marginRight = '1rem';
   ReactDOM.render(<FavoriteButton />, div);
-  element.insertBefore(div, element.childNodes[1]);
+  element.insertBefore(div, element.childNodes[2]);
   logger.debug('Favorite button created.');
   return true;
 }
